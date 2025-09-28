@@ -1,0 +1,154 @@
+---
+title: "Breast Cancer Survival Analysis"
+format: 
+  html:
+    embed-resources: true
+    date-modified: today
+    toc: true
+
+---
+
+## Data Cleaning
+
+Load packages:
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+
+
+```
+
+Load data. We select only the first 31 rows of the data as the rest are RNA profiles:
+
+
+```{r message=FALSE, warning=FALSE}
+data <- read.csv("../data/METABRIC_RNA_Mutation.csv")
+
+# first 31 rows are clinical attributes; rest is RNA expression data
+data_selected <- data |> select(1:31)
+
+
+```
+
+Checking for duplicates:
+```{r message=FALSE, warning=FALSE}
+
+any(duplicated(data_selected))
+```
+
+There are no duplicates in the data. Now we look for variables with missing values:
+
+```{r message=FALSE, warning=FALSE}
+
+# check variables with missing values 
+colSums(is.na(data_selected)) 
+
+
+```
+From the above output:
+* mutation_count, neoplasm_histologic_grade, tumor_size and tumor_stage have missing values. 
+
+* tumor_size (missing 20) and tumor_stage (missing 501) are variables important to the research question, so for those we found exactly what proportion were missing:
+
+```{r message=FALSE, warning=FALSE}
+
+# how many patients with missing tumor size-- proportion of total patients
+mean(is.na(data_selected$tumor_size)) 
+
+```
+
+Since there are 20 patients with missing tumour sizes, which is only ~1% of the number of patients in the dataset, these rows were dropped. 
+
+Now investigate missing tumor stage values:
+
+```{r message=FALSE, warning=FALSE}
+
+# how many patients with missing tumor stage-- proportion of total patients
+mean(is.na(data_selected$tumor_stage))
+
+```
+
+26% is a large proportion of the whole dataset--removing all rows could have bias our results. We check the difference and see if there is any difference between the patients with a known tumor size and those without:
+
+```{r}
+tapply(data$overall_survival, is.na(data_selected$tumor_stage), summary)
+
+```
+
+Patients with missing tumor stage had a lower mean overall survival rate (37.9%) compared to those with recorded tumor stage (43.6%), suggesting missingness may not be completely random. This should be considered when interpreting results.
+
+```{r}
+# check if patients with missing have different ages
+
+boxplot(age_at_diagnosis ~ is.na(tumor_stage), data = data_selected)
+```
+
+From the comparative boxplot, those with missing tumor stage values seem to be older on average. To confirm this, we run a Welch Two Sample t-test:
+
+```{r}
+t.test(age_at_diagnosis ~ is.na(tumor_stage), data = data_selected)
+```
+
+p = 0.004806 (p < 0.05) so the differences in ages are significant. 
+
+
+
+```{r}
+# Create group subsets
+group_false <- data$age_at_diagnosis[!is.na(data_selected$tumor_stage)]
+group_true  <- data$age_at_diagnosis[is.na(data_selected$tumor_stage)]
+
+# code for qqplots 
+
+# qqnorm(group_false, main = "Q-Q Plot: Group FALSE")
+# qqline(group_false, col = "red")
+# qqnorm(group_true, main = "Q-Q Plot: Group TRUE")
+# qqline(group_true, col = "blue")
+
+```
+
+A QQ plot for age distribution showed slight deviations from normality but was generally linear. Given the large sample size (n > 800), the Central Limit Theorem allows us to assume approximate normality for the Welch t-test.
+
+```{r}
+mean1 <- mean(group_false)
+mean2 <- mean(group_true)
+
+sd1 <- sd(group_false)
+sd2 <- sd(group_true)
+
+cohens_d <- (mean1 - mean2) / sqrt((sd1^2 + sd2^2) / 2)
+cohens_d
+```
+
+There is a statistically significant difference in age between patients with missing and non-missing tumor_stage (p = 0.0048), although the effect size is small (Cohen’s d = −0.15). Because age is a predictor in the study, this suggests missingness in tumor_stage may not be completely random.
+
+Due to the scope of this project, we will drop these cases but note this as a potential source of bias in downstream analysis.
+
+```{r}
+
+n_before <- nrow(data_selected)
+data_clean <- data_selected |>
+  filter(!is.na(tumor_stage), !is.na(tumor_size)) |>
+  select(
+    age_at_diagnosis,                       # predictor
+    tumor_stage,                            # predictor
+    tumor_size,                             # predictor
+    her2_status,                            # predictor
+    lymph_nodes_examined_positive,         # predictor
+    neoplasm_histologic_grade,              # possible confounder/prognostic factor
+    nottingham_prognostic_index,            # possible confounder/prognostic factor
+    er_status,                              # possible confounder
+    pr_status,                              # possible confounder
+    her2_status_measured_by_snp6,          # measurement method detail
+    overall_survival_months,               # outcome
+    overall_survival,                      # outcome indicator
+    death_from_cancer                      # outcome indicator
+  )
+
+n_after <- nrow(data_clean)
+
+cat("Dropped", n_before - n_after, "rows (", round((n_before - n_after) / n_before * 100, 1), "% of dataset )\n")
+
+
+```
+
