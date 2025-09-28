@@ -1,0 +1,104 @@
+---
+title: "Breast Cancer Survival Analysis"
+author: "Vanessa Huang"
+format: 
+  html:
+    embed-resources: true
+    toc: true
+    code-fold: true
+---
+
+## Introduction
+
+**Aim:**
+
+Investigate how clinical features i.e. (tumor stage, tumor size, HER2 receptor status) relate to the long-term survival of breast cancer patients.
+
+**Questions:**
+
+* Does tumour stage, tumor size, the number of lymph nodes involved, patient age and HER2 receptor status relate to the long-term survival of breast cancer patients?
+
+* If so, which prognostic clinical feature is the strongest prognostic/predictive factor? 
+
+\n
+
+**Hypothesis:**
+
+We expect tumor stage, size and lymph node involvement to have the largest effect size on survival, followed by age and HER2 receptor status.
+
+## Data Acquisition
+
+The dataset we are using is from the METABRIC study, and sourced from Kaggle: https://www.kaggle.com/datasets/raghadalharbi/breast-cancer-gene-expression-profiles-metabric/data
+
+This data includes clinical and genetic data of 1900 breast cancer patients in Canada. The dataset covers individuals across a broad age spectrum, ranging from 35 to 85 years. This large sample size and wide demographic coverage allow for robust statistical analysis to take place. 
+
+This data was collected longitudinally over a period of 25 years. The clinical variables available are patient age, overall survival in months, type of breast cancer, cellularity, tumor size/status, and type of treatment. The genetic variables available are HER2 status, mutation count, oncotree code, and various other gene markers. Overall, it contains 31 clinical variables, m-RNA z-score levels for 331 genes, and mutations in 175 genes. 
+
+
+## Initial Data Analysis
+
+Loading packages:
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(janitor)
+library(plotly)
+library(rafalib)
+library(kableExtra)
+library(gridExtra)
+
+```
+
+
+Load in data:
+
+```{r message=FALSE, warning=FALSE}
+data <- read.csv("data/METABRIC_RNA_Mutation.csv")
+
+glimpse(data)
+
+colSums(is.na(data))
+
+
+data <- data |>
+  mutate(tumor_stage = as.factor(tumor_stage),) |> 
+  drop_na() |>
+
+sum(is.na(data$tumor_stage))        # how many missing
+mean(is.na(data$tumor_stage))       # proportion missing
+
+boxplot(age_at_diagnosis ~ is.na(tumor_stage), data = data)
+t.test(age_at_diagnosis ~ is.na(tumor_stage), data = data)
+
+# Create group subsets
+group_false <- data$age_at_diagnosis[!is.na(data$tumor_stage)]
+group_true  <- data$age_at_diagnosis[is.na(data$tumor_stage)]
+
+qqnorm(group_false, main = "Q-Q Plot: Group FALSE")
+qqline(group_false, col = "red")
+qqnorm(group_true, main = "Q-Q Plot: Group TRUE")
+qqline(group_true, col = "blue")
+
+tapply(data$overall_survival, is.na(data$tumor_stage), summary)
+
+```
+
+
+
+## Exploratory Data Analysis
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+### 3.2 Assumptions
+
