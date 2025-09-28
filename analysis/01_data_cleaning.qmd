@@ -167,7 +167,6 @@ data_clean <- data_clean %>%
 
 ```{r}
 glimpse(data_clean)
-summary(data_clean) # Final dataset size
 nrow(data_clean)
 write.csv(data_clean, "../data/data_clean.csv", row.names = FALSE)
 ```

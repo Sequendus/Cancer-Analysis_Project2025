@@ -3328,49 +3328,11 @@ $ overall_survival_months       &lt;dbl&gt; 140.50000, 84.63333, 163.70000, 164.
 $ overall_survival              &lt;int&gt; 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0…
 $ death_from_cancer             &lt;fct&gt; Living, Living, Died of Disease, Living,…</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(data_clean) <span class="co"># Final dataset size</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code> age_at_diagnosis tumor_stage   tumor_size       her2_status  
- Min.   :21.93    0:  3       Min.   :  1.00   Negative:1228  
- 1st Qu.:51.00    1:475       1st Qu.: 17.00   Positive: 172  
- Median :61.13    2:800       Median : 22.00                  
- Mean   :60.61    3:113       Mean   : 25.85                  
- 3rd Qu.:69.89    4:  9       3rd Qu.: 30.00                  
- Max.   :96.29                Max.   :180.00                  
- lymph_nodes_examined_positive neoplasm_histologic_grade
- Min.   : 0.000                1   :114                 
- 1st Qu.: 0.000                2   :534                 
- Median : 0.000                3   :706                 
- Mean   : 1.892                NA&#39;s: 46                 
- 3rd Qu.: 2.000                                         
- Max.   :41.000                                         
- nottingham_prognostic_index    er_status       pr_status  
- Min.   :1.020               Negative: 319   Negative:661  
- 1st Qu.:3.046               Positive:1081   Positive:739  
- Median :4.042                                             
- Mean   :4.040                                             
- 3rd Qu.:5.042                                             
- Max.   :6.360                                             
- her2_status_measured_by_snp6 overall_survival_months overall_survival
- GAIN   : 298                 Min.   :  0.1           Min.   :0.0000  
- LOSS   :  80                 1st Qu.: 61.9           1st Qu.:0.0000  
- NEUTRAL:1019                 Median :117.6           Median :0.0000  
- UNDEF  :   3                 Mean   :127.8           Mean   :0.4357  
-                              3rd Qu.:189.1           3rd Qu.:1.0000  
-                              Max.   :351.0           Max.   :1.0000  
-            death_from_cancer
-                     :  1    
- Died of Disease     :468    
- Died of Other Causes:321    
- Living              :610    
-                             
-                             </code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(data_clean)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(data_clean)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 1400</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(data_clean, <span class="st">&quot;../data/data_clean.csv&quot;</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(data_clean, <span class="st">&quot;../data/data_clean.csv&quot;</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 
