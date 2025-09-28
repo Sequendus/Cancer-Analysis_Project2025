@@ -14,8 +14,6 @@ Load packages:
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
-
-
 ```
 
 Load data. We select only the first 31 rows of the data as the rest are RNA profiles:
@@ -150,5 +148,27 @@ n_after <- nrow(data_clean)
 cat("Dropped", n_before - n_after, "rows (", round((n_before - n_after) / n_before * 100, 1), "% of dataset )\n")
 
 
+```
+Lastly, change data types to correct format:
+```{r}
+data_clean <- data_clean %>%
+  mutate(
+    tumor_stage = as.factor(tumor_stage),
+    her2_status = as.factor(her2_status),
+    er_status = as.factor(er_status),
+    pr_status = as.factor(pr_status),
+    her2_status_measured_by_snp6 = as.factor(her2_status_measured_by_snp6),
+    death_from_cancer = as.factor(death_from_cancer),
+    neoplasm_histologic_grade = as.factor(neoplasm_histologic_grade)
+  )
+
+```
+
+
+```{r}
+glimpse(data_clean)
+summary(data_clean) # Final dataset size
+nrow(data_clean)
+write.csv(data_clean, "../data/data_clean.csv", row.names = FALSE)
 ```
 
