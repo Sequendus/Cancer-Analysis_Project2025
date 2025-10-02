@@ -117,6 +117,8 @@ ggplotly(tumor_size_boxplot)
 
 #### 2. 4. Number of Positive Lymph Nodes
 
+The number of lymph nodes that were examined positive is heavily skewed to the right, with the median lymph nodes being 0 and the mean 1.892.
+
 ```{r warning=FALSE}
 summary(data$lymph_nodes_examined_positive)
 
@@ -138,6 +140,10 @@ ggplotly(lymph_node_hist)
 ```
 
 #### 2. 5. ER and HER2 Status
+
+The majority of patients had ER positive breast cancer compared to ER negative. 
+
+A majority also had HER2 negative breast cancer compared to HER2 positive.
 
 ```{r}
 er_barplot <- ggplot(data, aes(x = er_status)) + geom_bar(color = 'black', fill = "steelblue") + labs(x = "ER Status", y = "Count") 
