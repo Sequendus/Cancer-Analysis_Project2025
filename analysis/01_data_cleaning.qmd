@@ -151,7 +151,7 @@ cat("Dropped", n_before - n_after, "rows (", round((n_before - n_after) / n_befo
 ```
 Lastly, change data types to correct format:
 ```{r}
-data_clean <- data_clean %>%
+data_clean <- data_clean |>
   mutate(
     tumor_stage = as.factor(tumor_stage),
     her2_status = as.factor(her2_status),
@@ -166,8 +166,8 @@ data_clean <- data_clean %>%
 
 
 ```{r}
-glimpse(data_clean)
 nrow(data_clean)
 write.csv(data_clean, "../data/data_clean.csv", row.names = FALSE)
+glimpse(data_clean)
 ```
 
