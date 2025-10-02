@@ -15,7 +15,7 @@ format:
 
 First, we load packages and load data. Note that we have to change some data types from chr to factor every time we load in the file for a new qmd, because when the file is read, it is assigned chr by default.
 
-There are 1400 rows (patients) in the data.
+There are 1400 rows (patients) in the cleaned data.
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
