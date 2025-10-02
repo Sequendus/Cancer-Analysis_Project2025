@@ -1,0 +1,190 @@
+---
+title: "Breast Cancer Survival Analysis"
+format: 
+  html:
+    embed-resources: true
+    date-modified: today
+    code-fold: true
+    toc: true
+
+---
+
+## Exploratory Data Analysis
+
+#### Preamble
+
+Load packages and data:
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(plotly)
+library(rafalib)
+library(kableExtra)
+library(gridExtra)
+library(knitr)
+
+library(survival)
+library(survminer)
+
+
+data <- read.csv("../data/data_clean.csv")
+
+# overall_survival is not mutated, as it needs to be numeric for survival analysis
+data <- data |>
+  mutate(
+    tumor_stage = as.factor(tumor_stage),
+    her2_status = as.factor(her2_status),
+    er_status = as.factor(er_status),
+    pr_status = as.factor(pr_status),
+    her2_status_measured_by_snp6 = as.factor(her2_status_measured_by_snp6),
+    death_from_cancer = as.factor(death_from_cancer),
+    neoplasm_histologic_grade = as.factor(neoplasm_histologic_grade),
+  )
+
+```
+
+
+
+### 1. Survival function
+
+#### 1.1. Assumptions
+
+* Events are independent of each other. 
+
+* Right-censoring is uninformative.
+
+* Event times are exact.
+
+#### 1.2. Plotting survival curves
+
+We fit a Kaplan-Meier Survival curve:
+
+```{r warning=FALSE}
+
+km <- survfit(Surv(data$overall_survival_months, data$overall_survival) ~ 1)
+km
+
+survival_table <- summary(km)
+
+ggsurvplot(km,
+           data = data,              
+           conf.int = FALSE,
+           xlab = "Time (months)",
+           ylab = "Survival Probability",
+           surv.median.line = "hv",
+           xlim = c(0, 350),        # show only first 60 months
+           break.time.by = 50,      # tick marks every 12 months
+           legend = "none")
+
+```
+* There were 1,400 patients in total.
+
+* 610 experienced the event (death). The rest (790) were censored.
+
+* The median survival time is 200 months. After that, the survival probability drops below 0.5.
+
+* The 95% confidence interval for the median survival time is 194 to 211 months.
+
+```{r}
+fit_stage <- survfit(Surv(data$overall_survival_months, data$overall_survival) ~ tumor_stage, data = data)
+
+# KM plot with log-rank p-value
+ggsurvplot(fit_stage, data = data, pval = TRUE, 
+           conf.int = TRUE,
+           legend.title = "Tumor Stage",
+           legend.labs = levels(data$tumor_stage))
+
+```
+
+```{r}
+fit_her2 <- survfit(Surv(data$overall_survival_months, data$overall_survival) ~ her2_status, data = data)
+
+# KM plot with log-rank p-value
+ggsurvplot(fit_her2, data = data, pval.method = TRUE, pval = TRUE, 
+           conf.int = TRUE,
+           legend.title = "HER2 Status",
+           legend.labs = levels(data$her2_status))
+
+
+fit_er <- survfit(Surv(data$overall_survival_months, data$overall_survival) ~ er_status, data = data)
+
+# KM plot with log-rank p-value
+ggsurvplot(fit_er, data = data, pval.method = TRUE, pval = TRUE, 
+           conf.int = TRUE,
+           legend.title = "ER Status",
+           legend.labs = levels(data$er_status))
+
+```
+
+### 2. Cox Proportional Hazards (PH) Model: Assumptions
+
+Same as for the KM curves, but we also need to check for the following:
+
+#### 2. 1. Constant Hazard Ratios (HR) are constant
+
+Hazard ratios between two groups are constant over time. If true, then graphs should be parallel:
+
+```{r}
+
+# tumor stage
+
+fit_stage_log <- survfit(Surv(overall_survival_months, overall_survival) ~ tumor_stage, data = data)
+
+
+plot(fit_stage_log,
+     fun = "cloglog",  # log(-log(S))
+     xscale = 2,       # log10 scale on x-axis
+     col = 1:2,
+     lty = 1:2)
+
+```
+
+```{r}
+# tumor stage
+
+fit_her2_log <- survfit(Surv(overall_survival_months, overall_survival) ~ her2_status, data = data)
+
+
+plot(fit_her2_log,
+     fun = "cloglog",  # log(-log(S))
+     xscale = 2,       # log10 scale on x-axis
+     col = 1:2,
+     lty = 1:2)
+
+```
+
+```{r}
+# tumor stage
+
+fit_er_log <- survfit(Surv(overall_survival_months, overall_survival) ~ er_status, data = data)
+
+
+plot(fit_er_log,
+     fun = "cloglog",  # log(-log(S))
+     xscale = 2,       # log10 scale on x-axis
+     col = 1:2,
+     lty = 1:2)
+
+```
+
+
+```{r}
+
+fit_her2_log <- survfit(Surv(overall_survival_months, overall_survival) ~ her2_status, data = data)
+
+fit_ph <- coxph(Surv(overall_survival_months, overall_survival) ~ tumor_stage + age_at_diagnosis + her2_status + er_status + lymph_nodes_examined_positive + tumor_size, data = data)
+
+test.ph <- cox.zph(fit_ph)
+print(test.ph)
+plot(test.ph)
+
+```
+
+#### 2. 2. Multicollinearity
+
+
+```{r}
+cor(data$tumor_size, as.numeric(data$tumor_stage))
+
+```
+
