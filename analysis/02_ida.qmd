@@ -13,9 +13,9 @@ format:
 
 #### 1. Preamble
 
-First, we load packages and load data. Note that we have to change some data types from chr to factor every time we load in the file for a new qmd, because when the file is read, it is assigned chr by default:
+First, we load packages and load data. Note that we have to change some data types from chr to factor every time we load in the file for a new qmd, because when the file is read, it is assigned chr by default.
 
-Use glimpse(data) to double-check that the data types are correct.
+There are 1400 rows (patients) in the data.
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
@@ -30,6 +30,9 @@ library(knitr)
 ```{r message=FALSE, warning=FALSE}
 data <- read.csv("../data/data_clean.csv")
 
+# double check variables have no missing values 
+# colSums(is.na(data))
+
 data <- data |>
   mutate(
     tumor_stage = as.factor(tumor_stage),
@@ -43,6 +46,8 @@ data <- data |>
   )
 
 # glimpse(data)
+
+nrow(data)
 
 ```
 
