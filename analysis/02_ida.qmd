@@ -1,0 +1,181 @@
+---
+title: "Breast Cancer Survival Analysis"
+format: 
+  html:
+    embed-resources: true
+    date-modified: today
+    code-fold: true
+    toc: true
+
+---
+
+## Initial Data Analysis
+
+#### 1. Preamble
+
+First, we load packages and load data. Note that we have to change some data types from chr to factor every time we load in the file for a new qmd, because when the file is read, it is assigned chr by default:
+
+Use glimpse(data) to double-check that the data types are correct.
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(plotly)
+library(rafalib)
+library(kableExtra)
+library(gridExtra)
+library(knitr)
+
+```
+
+```{r message=FALSE, warning=FALSE}
+data <- read.csv("../data/data_clean.csv")
+
+data <- data |>
+  mutate(
+    tumor_stage = as.factor(tumor_stage),
+    her2_status = as.factor(her2_status),
+    er_status = as.factor(er_status),
+    pr_status = as.factor(pr_status),
+    her2_status_measured_by_snp6 = as.factor(her2_status_measured_by_snp6),
+    death_from_cancer = as.factor(death_from_cancer),
+    neoplasm_histologic_grade = as.factor(neoplasm_histologic_grade),
+    overall_survival = as.factor(overall_survival)
+  )
+
+# glimpse(data)
+
+```
+
+
+### 2. Patient Demographics
+
+#### 2. 1. Patient Age
+
+The median age at diagnosis is 61.13, and the mean age is 60.61. The ages follow a roughly bell-shaped curve shape but are very slightly skewed to the left.
+ 
+```{r message=FALSE, warning=FALSE}
+
+summary(data$age_at_diagnosis)
+
+age_hist <- ggplot(data, aes(x = age_at_diagnosis)) +
+  geom_histogram(
+    binwidth = 5,
+    boundary = 25,
+    color = "black",
+    fill = "steelblue",
+    aes(text = paste0("Age range: ", after_stat(xmin), "-", after_stat(xmax),
+                      "<br>Count: ", after_stat(count)))
+  ) +
+  labs(
+    title = "Distribution of Age at Diagnosis",
+    x = "Age at Diagnosis (years)",
+    y = "Count"
+  )
+
+
+ggplotly(age_hist, tooltip = "text")
+
+
+
+```
+
+#### 2. 2. Tumour Stage
+
+Below shows the distribution of tumour stages from 1-4. Most patients at the time of diagnosis had stage 1 or stage 2 breast cancer.
+
+```{r}
+
+summary(data$tumor_stage)
+
+tumor_stage_graph <- ggplot(data, aes(x = tumor_stage)) + geom_bar(color = "black",
+    fill = "steelblue") + labs(
+    title = "Tumour Stages of Patients",
+    x = "Tumour Stage (0-4)",
+    y = "Count"
+  )
+ggplotly(tumor_stage_graph)
+
+```
+
+#### 2. 3. Tumour Size
+
+Tumour sizes are heavily right-skewed, with quite a few outliers present. The median size was 22 mm, and the mean was 25.85 mm.
+
+```{r}
+
+summary(data$tumor_size)
+
+tumor_size_boxplot <- ggplot(data, aes(y = tumor_size)) +
+  geom_boxplot(fill = "lightblue") + labs(
+    title = "Tumour Sizes of Patients",
+    y = "Tumour Size (mm)"
+  )
+
+ggplotly(tumor_size_boxplot)
+
+```
+
+#### 2. 4. Number of Positive Lymph Nodes
+
+```{r warning=FALSE}
+summary(data$lymph_nodes_examined_positive)
+
+lymph_node_hist <- ggplot(data, aes(x = lymph_nodes_examined_positive)) +
+  geom_histogram(
+    binwidth = 3,
+    color = "black",
+    fill = "steelblue",
+    aes(text = paste0("Lymph node range: ", after_stat(xmin), "-", after_stat(xmax),
+                      "<br>Count: ", after_stat(count)))
+  ) +
+  labs(
+    title = "Distribution of No. of Positive Lymph Nodes",
+    x = "Number of Lymph nodes examined positive",
+    y = "Count"
+  )
+
+ggplotly(lymph_node_hist)
+```
+
+#### 2. 5. ER and HER2 Status
+
+```{r}
+er_barplot <- ggplot(data, aes(x = er_status)) + geom_bar(color = 'black', fill = "steelblue") + labs(x = "ER Status", y = "Count") 
+
+her2_barplot <- ggplot(data, aes(x = her2_status)) + geom_bar(color = 'black',fill = "steelblue") + labs(x = "HER2 Status", y = "Count") +  ggtitle("Distribution of ER Status                    Distribution of HER2 Status")
+
+
+subplot(
+  ggplotly(er_barplot), 
+  ggplotly(her2_barplot), 
+  nrows = 1, 
+  shareY = TRUE, 
+  titleX = TRUE
+) |>  layout(yaxis = list(range = c(0, 1300))) # so that graph doesn't get cut off
+```
+
+#### 2. 6. Overall Survival
+
+
+By the end of the study, 790 patients did not survive, while 610 survived. 
+
+```{r}
+summary(data$overall_survival)
+```
+
+
+The histogram below shows the distribution of survival times. The data is skewed to the right, with more patients having a short overall survival time. The median survival time was 117.6 months, and the mean was 127.8.
+
+
+```{r}
+summary(data$overall_survival_months)
+
+survival_hist <- ggplot(data, aes(x = overall_survival_months)) +
+    geom_histogram(bins = 20, boundary = 0, fill = "steelblue", colour ='black')
+
+ggplotly(survival_hist)
+
+
+
+```
+
