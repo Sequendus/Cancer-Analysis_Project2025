@@ -124,6 +124,9 @@ Same as for the KM curves, but we also need to check for the following:
 
 Hazard ratios between two groups are constant over time. If true, then graphs should be parallel:
 
+(PH log minus log plots imply constant HR assumptions were violated but I fitted the Cox PH model anyway and the residuals were horizontal, so most likely it was because we didn't adjust for the covariates before-- because the crossing of the log minus log plots can be due to a covariate missing as well as time-dependency.)
+
+
 ```{r}
 
 # tumor stage
@@ -180,7 +183,18 @@ plot(test.ph)
 
 ```
 
-#### 2. 2. Multicollinearity
+#### 2. 2. Linearity
+```{r}
+
+
+fit_ph <- coxph(Surv(overall_survival_months, overall_survival) ~ tumor_stage + age_at_diagnosis + her2_status + er_status + lymph_nodes_examined_positive + tumor_size, data = data)
+
+
+
+```
+
+
+#### 2. 3. Multicollinearity
 
 
 ```{r}
