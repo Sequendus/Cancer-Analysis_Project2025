@@ -1,3 +1,3 @@
-# Breast Cancer Survival Analysis Projdct
+# Breast Cancer Survival Analysis Project
 
 README coming soon…
