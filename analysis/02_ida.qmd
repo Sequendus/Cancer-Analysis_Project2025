@@ -24,6 +24,7 @@ library(rafalib)
 library(kableExtra)
 library(gridExtra)
 library(knitr)
+library(ggmosaic)
 
 ```
 
@@ -163,6 +164,18 @@ subplot(
   shareY = TRUE, 
   titleX = TRUE
 ) |>  layout(yaxis = list(range = c(0, 1300))) # so that graph doesn't get cut off
+
+mosaic_subtypes <- ggplot(data = data) +
+  geom_mosaic(aes(x = product(er_status, her2_status), fill = her2_status)) + 
+  labs(
+    title = 'Distribution of HER2 Status by ER Status',
+    x = 'ER Status',
+    y = 'HER2 Status'
+  ) +
+  theme_minimal()
+
+ggplotly(mosaic_subtypes)
+
 ```
 
 #### 2. 6. Overall Survival
