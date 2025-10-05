@@ -31,6 +31,13 @@ data <- read.csv("../data/data_clean.csv")
 
 # overall_survival is not mutated, as it needs to be numeric for survival analysis
 data <- data |>
+    mutate(lymph_nodes_group = case_when(
+    lymph_nodes_examined_positive == 0 ~ "0",
+    lymph_nodes_examined_positive == 1 ~ "1",
+    lymph_nodes_examined_positive == 2 ~ "2",
+    lymph_nodes_examined_positive <= 5 ~ "3-5",
+    lymph_nodes_examined_positive > 5 ~ ">5"
+  )) |>
   mutate(
     tumor_stage = as.factor(tumor_stage),
     her2_status = as.factor(her2_status),
@@ -39,7 +46,12 @@ data <- data |>
     her2_status_measured_by_snp6 = as.factor(her2_status_measured_by_snp6),
     death_from_cancer = as.factor(death_from_cancer),
     neoplasm_histologic_grade = as.factor(neoplasm_histologic_grade),
-  )
+    lymph_nodes_group = as.factor(lymph_nodes_group)
+  ) |> filter(tumor_stage != "0", tumor_stage != "4")
+  
+
+data <- droplevels(data)
+
 
 ```
 
@@ -105,7 +117,41 @@ ggsurvplot(fit_her2, data = data, pval.method = TRUE, pval = TRUE,
            legend.title = "HER2 Status",
            legend.labs = levels(data$her2_status))
 
+fit_her2_by_tumor <- survfit(Surv(overall_survival_months, overall_survival) ~ her2_status + tumor_stage, data = data)
 
+ggsurvplot_facet(
+  fit_her2_by_tumor,
+  data = data,
+  facet.by = "tumor_stage",
+  pval = TRUE,
+  pval.method = TRUE,
+  conf.int = TRUE,
+  legend.title = "HER2 Status",
+  legend.labs = levels(data$her2_status),
+  palette = "Dark2"
+)
+
+
+
+fit_her2_by_lymph <- survfit(Surv(overall_survival_months, overall_survival) ~ her2_status + lymph_nodes_group, data = data)
+
+ggsurvplot_facet(
+  fit_her2_by_lymph,
+  data = data,
+  facet.by = "lymph_nodes_group",
+  pval = TRUE,
+  pval.method = TRUE,
+  conf.int = TRUE,
+  legend.title = "HER2 Status",
+  legend.labs = levels(data$her2_status),
+  palette = "Dark2"
+)
+
+
+```
+
+
+```{r}
 fit_er <- survfit(Surv(data$overall_survival_months, data$overall_survival) ~ er_status, data = data)
 
 # KM plot with log-rank p-value
@@ -113,6 +159,36 @@ ggsurvplot(fit_er, data = data, pval.method = TRUE, pval = TRUE,
            conf.int = TRUE,
            legend.title = "ER Status",
            legend.labs = levels(data$er_status))
+
+
+fit_er_by_tumor <- survfit(Surv(overall_survival_months, overall_survival) ~ er_status + tumor_stage, data = data)
+
+
+ggsurvplot_facet(
+  fit_er_by_tumor,
+  data = data,
+  facet.by = "tumor_stage",
+  pval = TRUE,
+  pval.method = TRUE,
+  conf.int = TRUE,
+  legend.title = "ER Status",
+  legend.labs = levels(data$er_status),
+)
+
+fit_er_by_lymph <- survfit(Surv(overall_survival_months, overall_survival) ~ er_status + lymph_nodes_group, data = data)
+
+ggsurvplot_facet(
+  fit_er_by_lymph,
+  data = data,
+  facet.by = "lymph_nodes_group",
+  pval = TRUE,
+  pval.method = TRUE,
+  conf.int = TRUE,
+  legend.title = "ER Status",
+  legend.labs = levels(data$er_status),
+  palette = "Dark2"
+)
+
 
 ```
 
