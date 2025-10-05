@@ -129,7 +129,7 @@ summary(data$lymph_nodes_examined_positive)
 
 lymph_node_hist <- ggplot(data, aes(x = lymph_nodes_examined_positive)) +
   geom_histogram(
-    binwidth = 3,
+    binwidth = 1,
     color = "black",
     fill = "steelblue",
     aes(text = paste0("Lymph node range: ", after_stat(xmin), "-", after_stat(xmax),
