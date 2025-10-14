@@ -1,5 +1,5 @@
 ---
-title: "Breast Cancer Survival Analysis"
+title: "Breast Cancer Survival Analysis: EDA"
 format: 
   html:
     embed-resources: true
@@ -8,12 +8,6 @@ format:
     toc: true
 
 ---
-
-## Exploratory Data Analysis
-
-#### Preamble
-
-Load packages and data:
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
@@ -25,11 +19,20 @@ library(knitr)
 
 library(survival)
 library(survminer)
+library(car)  # for vif()
 
 
 data <- read.csv("../data/data_clean.csv")
 
 # overall_survival is not mutated, as it needs to be numeric for survival analysis
+
+# merge 1-2, 3-5, above 5 -- for consistency
+
+# pairwise correlation for interaction effect ? 
+
+# check the line at 1
+
+
 data <- data |>
     mutate(lymph_nodes_group = case_when(
     lymph_nodes_examined_positive == 0 ~ "0",
@@ -52,14 +55,15 @@ data <- data |>
 
 data <- droplevels(data)
 
-
+table(data$lymph_nodes_examined_positive)
+table(data$lymph_nodes_group)
 ```
 
 
 
-### 1. Survival function
+# 1. KM Survival Curves
 
-#### 1.1. Assumptions
+## 1.1. Assumptions
 
 * Events are independent of each other. 
 
@@ -67,9 +71,11 @@ data <- droplevels(data)
 
 * Event times are exact.
 
-#### 1.2. Plotting survival curves
+## 1.2. Plotting survival curves
 
-We fit a Kaplan-Meier Survival curve:
+### 1.2.1. Overall curve
+
+Fit a Kaplan-Meier Survival curve for all the data:
 
 ```{r warning=FALSE}
 
@@ -97,16 +103,79 @@ ggsurvplot(km,
 
 * The 95% confidence interval for the median survival time is 194 to 211 months.
 
+### 1.2.2. Curves by Tumour Stage
+
+
 ```{r}
 fit_stage <- survfit(Surv(data$overall_survival_months, data$overall_survival) ~ tumor_stage, data = data)
 
 # KM plot with log-rank p-value
-ggsurvplot(fit_stage, data = data, pval = TRUE, 
+ggsurvplot(fit_stage, data = data, pval.method = TRUE, pval = TRUE, 
            conf.int = TRUE,
            legend.title = "Tumor Stage",
            legend.labs = levels(data$tumor_stage))
+```
+
+Stratified by HER2 status:
+
+```{r}
+# HER2 status
+fit_tumor_by_her2 <- survfit(Surv(overall_survival_months, overall_survival) ~ tumor_stage + her2_status, data = data)
+
+ggsurvplot_facet(
+  fit_tumor_by_her2,
+  data = data,
+  facet.by = "her2_status",
+  pval = TRUE,
+  pval.method = TRUE,
+  conf.int = TRUE,
+  legend.title = "Tumour Stage",
+  legend.labs = levels(data$tumor_stage),
+  palette = "Dark2"
+)
+```
+
+Stratified by ER status:
+
+```{r}
+# ER status
+fit_tumor_by_er <- survfit(Surv(overall_survival_months, overall_survival) ~ tumor_stage + er_status, data = data)
+
+ggsurvplot_facet(
+  fit_tumor_by_er,
+  data = data,
+  facet.by = "er_status",
+  pval = TRUE,
+  pval.method = TRUE,
+  conf.int = TRUE,
+  legend.title = "Tumour Stage",
+  legend.labs = levels(data$tumor_stage),
+  palette = "Dark2"
+)
+```
+
+Stratified by lymph node size:
+
+```{r}
+# lymph node size (levels)
+
+fit_tumor_by_lymph <- survfit(Surv(overall_survival_months, overall_survival) ~ tumor_stage + lymph_nodes_group, data = data)
+
+ggsurvplot_facet(
+  fit_tumor_by_lymph,
+  data = data,
+  facet.by = "lymph_nodes_group",
+  pval = TRUE,
+  pval.method = TRUE,
+  conf.int = TRUE,
+  legend.title = "Tumour Stage",
+  legend.labs = levels(data$tumor_stage),
+  palette = "Dark2"
+)
 
 ```
+
+### 1.2.3. Curves by HER2 Status
 
 ```{r}
 fit_her2 <- survfit(Surv(data$overall_survival_months, data$overall_survival) ~ her2_status, data = data)
@@ -116,7 +185,11 @@ ggsurvplot(fit_her2, data = data, pval.method = TRUE, pval = TRUE,
            conf.int = TRUE,
            legend.title = "HER2 Status",
            legend.labs = levels(data$her2_status))
+```
 
+Stratified by tumour stage:
+
+```{r}
 fit_her2_by_tumor <- survfit(Surv(overall_survival_months, overall_survival) ~ her2_status + tumor_stage, data = data)
 
 ggsurvplot_facet(
@@ -130,9 +203,35 @@ ggsurvplot_facet(
   legend.labs = levels(data$her2_status),
   palette = "Dark2"
 )
+```
 
 
+Stratified by ER status:
 
+
+```{r}
+fit_her2_by_er <- survfit(Surv(overall_survival_months, overall_survival) ~ her2_status + er_status, data = data)
+
+ggsurvplot_facet(
+  fit_her2_by_er,
+  data = data,
+  facet.by = "er_status",
+  pval = TRUE,
+  pval.method = TRUE,
+  conf.int = TRUE,
+  legend.title = "HER2 Status",
+  legend.labs = levels(data$her2_status),
+  palette = "Dark2"
+)
+
+
+```
+
+
+Stratified by lymph node size:
+
+
+```{r}
 fit_her2_by_lymph <- survfit(Surv(overall_survival_months, overall_survival) ~ her2_status + lymph_nodes_group, data = data)
 
 ggsurvplot_facet(
@@ -151,6 +250,9 @@ ggsurvplot_facet(
 ```
 
 
+### 1.2.4. Curves by ER Status
+
+
 ```{r}
 fit_er <- survfit(Surv(data$overall_survival_months, data$overall_survival) ~ er_status, data = data)
 
@@ -159,8 +261,12 @@ ggsurvplot(fit_er, data = data, pval.method = TRUE, pval = TRUE,
            conf.int = TRUE,
            legend.title = "ER Status",
            legend.labs = levels(data$er_status))
+```
+
+Stratified by tumour stage:
 
 
+```{r}
 fit_er_by_tumor <- survfit(Surv(overall_survival_months, overall_survival) ~ er_status + tumor_stage, data = data)
 
 
@@ -174,7 +280,34 @@ ggsurvplot_facet(
   legend.title = "ER Status",
   legend.labs = levels(data$er_status),
 )
+```
 
+Stratified by HER2 status:
+
+
+```{r}
+fit_er_by_her2 <- survfit(Surv(overall_survival_months, overall_survival) ~ er_status + her2_status, data = data)
+
+ggsurvplot_facet(
+  fit_er_by_her2,
+  data = data,
+  facet.by = "her2_status",
+  pval = TRUE,
+  pval.method = TRUE,
+  conf.int = TRUE,
+  legend.title = "ER Status",
+  legend.labs = levels(data$er_status),
+  palette = "Dark2"
+)
+
+
+```
+
+
+Stratified by lymph node size:
+
+
+```{r}
 fit_er_by_lymph <- survfit(Surv(overall_survival_months, overall_survival) ~ er_status + lymph_nodes_group, data = data)
 
 ggsurvplot_facet(
@@ -192,16 +325,23 @@ ggsurvplot_facet(
 
 ```
 
-### 2. Cox Proportional Hazards (PH) Model: Assumptions
+# 2. Cox Proportional Hazards (PH) Model: Assumptions
 
-Same as for the KM curves, but we also need to check for the following:
+Along with the assumptions for KM above in 1.1, we check for the following additional assumptions:
 
-#### 2. 1. Constant Hazard Ratios (HR) are constant
+## 2.1. Constant Hazard Ratios (HR) are constant
 
-Hazard ratios between two groups are constant over time. If true, then graphs should be parallel:
+The hazard ratio needs to be constant over time (e.g if the hazard at a specific timepoint for someone with tumour stage 2 is **double** that of one with stage 1, this ratio needs to stay constant over all time i.e., not dependent on time). If it isn't, we need to introduce the covariate as a time-dependent covariate in our model.
 
-(PH log minus log plots imply constant HR assumptions were violated but I fitted the Cox PH model anyway and the residuals were horizontal, so most likely it was because we didn't adjust for the covariates before-- because the crossing of the log minus log plots can be due to a covariate missing as well as time-dependency.)
 
+### 2.1.1 Log Minus Log (LML) check
+
+We can use LML graphs to check if this assumption is met. 
+
+Hazard ratios between two groups are constant over time. If true, then log minus long (log(-log(S))) graphs should be parallel (and not cross over):
+
+
+Tumour stage: 
 
 ```{r}
 
@@ -218,8 +358,10 @@ plot(fit_stage_log,
 
 ```
 
+HER2 status:
+
 ```{r}
-# tumor stage
+# er2 status
 
 fit_her2_log <- survfit(Surv(overall_survival_months, overall_survival) ~ her2_status, data = data)
 
@@ -232,8 +374,10 @@ plot(fit_her2_log,
 
 ```
 
+ER status: 
+
 ```{r}
-# tumor stage
+# ER status
 
 fit_er_log <- survfit(Surv(overall_survival_months, overall_survival) ~ er_status, data = data)
 
@@ -247,6 +391,14 @@ plot(fit_er_log,
 ```
 
 
+
+### 2.1.2 "Fit the model and check for residuals" check
+
+We can go ahead and fit the Cox model. Running cox.zph(fit_ph) can verify if the model assumption of proportional hazards is met. We can also look at the below residuals-- if there is no trend (horizontal), then the assumptions are likely met.
+
+LML plots are not parallel which imply constant HR assumptions were violated but I fitted the Cox PH model anyway and the residuals were horizontal (and p > 0.05 for all variables), so most likely it was because taking all covariates in account together results in PH ration being constant-- because the crossing of the LML plots from before can be due to a covariate missing as well as time-dependency.
+
+
 ```{r}
 
 fit_her2_log <- survfit(Surv(overall_survival_months, overall_survival) ~ her2_status, data = data)
@@ -257,24 +409,202 @@ test.ph <- cox.zph(fit_ph)
 print(test.ph)
 plot(test.ph)
 
+
+
+
 ```
 
-#### 2. 2. Linearity
-```{r}
+## 2.2. Linearity
 
+If a variable’s effect is not linear on the log hazard scale, treating it as if it were can introduce bias into the model, causing some variables to appear more influential than they truly are.
+
+We use Martingale residuals to check the linear assumption. If there is a non-linear trend, then a transformation of the data is required:
+
+```{r}
 
 fit_ph <- coxph(Surv(overall_survival_months, overall_survival) ~ tumor_stage + age_at_diagnosis + her2_status + er_status + lymph_nodes_examined_positive + tumor_size, data = data)
 
+martingale_resid <- residuals(fit_ph, type = "martingale")
 
+# Age at diagnosis
+plot(data$age_at_diagnosis, martingale_resid)
+
+# Lymph nodes examined positive
+plot(data$lymph_nodes_examined_positive, martingale_resid)
+
+# Tumor size
+plot(data$tumor_size, martingale_resid)
+
+
+```
+We need to log transform lymph nodes and tumor size:
+
+```{r}
+
+data$log_lymph_nodes <- log(data$lymph_nodes_examined_positive + 1)
+
+fit_ph_log <- coxph(Surv(overall_survival_months, overall_survival) ~ tumor_stage + age_at_diagnosis + her2_status + er_status + log_lymph_nodes + tumor_size, data = data)
+
+martingale_resid <- residuals(fit_ph_log, type = "martingale")
+plot(data$log_lymph_nodes, martingale_resid,
+     xlab = "log(lymph_nodes_examined_positive + 1)",
+     ylab = "Martingale residuals",
+     main = "Checking linearity after log transformation")
+
+
+data$log_tumor <- log(data$tumor_size + 1)
+
+fit_ph_log_tumor <- coxph(Surv(overall_survival_months, overall_survival) ~ tumor_stage + age_at_diagnosis + her2_status + er_status + log_lymph_nodes + log_tumor, data = data)
+
+martingale_resid <- residuals(fit_ph_log_tumor, type = "martingale")
+plot(data$log_tumor, martingale_resid,
+     xlab = "log(tumor_size)",
+     ylab = "Martingale residuals",
+     main = "Checking linearity after log transformation")
+
+
+fit_lin_node  <- coxph(Surv(overall_survival_months, overall_survival) ~ log(lymph_nodes_examined_positive+1) + tumor_stage + age_at_diagnosis + her2_status + er_status + log_tumor, data=data)
+
+fit_spl_node  <- coxph(Surv(overall_survival_months, overall_survival) ~ pspline(log(lymph_nodes_examined_positive+1)) + tumor_stage + age_at_diagnosis + her2_status + er_status + log_tumor, data=data)
+
+anova(fit_lin_node, fit_spl_node, test="Chisq")
+ 
+
+
+fit_lin_stage  <- coxph(Surv(overall_survival_months, overall_survival) ~ log_lymph_nodes + tumor_stage + age_at_diagnosis + her2_status + er_status + log_tumor, data=data)
+
+fit_spl_stage  <- coxph(Surv(overall_survival_months, overall_survival) ~ pspline(log(tumor_size+1)) + log_lymph_nodes + tumor_stage + age_at_diagnosis + her2_status + er_status, data=data)
+
+anova(fit_lin_stage, fit_spl_stage, test="Chisq")
 
 ```
 
 
-#### 2. 3. Multicollinearity
+## 2.3. Multicollinearity 
+
+If two variables are highly correlated, it could introduce further variance into the model.
+
+All VIF (Variance Inflation Factor) values are below 5, indicating no serious multicollinearity.
+
+```{r warning=FALSE}
+
+vif(fit_ph)
+
+```
+
+## 2.4. Interaction
+
+```{r}
+
+
+cox_interaction <- coxph(Surv(overall_survival_months, overall_survival) ~ (tumor_stage + age_at_diagnosis + her2_status + er_status + lymph_nodes_examined_positive + tumor_size)^2, data = data)
+
+round(
+  cbind("AHR"      = exp(summary(cox_interaction)$coef[, "coef"]),
+                     exp(confint(cox_interaction)),
+        "p-value"  = summary(cox_interaction)$coef[, "Pr(>|z|)"])
+  , 3)
+
+
+```
+The interaction between her2_status and tumor_size (p=.042), and between er_status and lymph_nodes_examined positive (p=.038) are significant; the other variables are fine. This means we need to include an interaction term between the two pairs, re-fit the model, and re-check previous assumptions.
+
+```{r}
+data <- data |>
+  mutate(
+    log_tumor_size = log(tumor_size),
+    log_nodes_positive = log(lymph_nodes_examined_positive + 1) # add 1 to avoid log(0)
+  )
+
+fit_log_int <- coxph(Surv(overall_survival_months, overall_survival) ~ 
+                   tumor_stage + age_at_diagnosis +
+                   her2_status * log_tumor_size +
+                   er_status * log_nodes_positive,
+                 data = data)
+
+
+test.ph_int <- cox.zph(fit_log_int)
+plot(test.ph_int)
+```
+
+Hm... the plot for ER_status curves up in the end a bit after 240 months. Print test.ph_int to see if there are any formal statistically significant variations over time between variables:
+
+```{r}
+print(test.ph_int)
+
+```
+
+There are no statistically significant differences in overall variation in time, (p >0.05), even though the er_status curves upwards. Therefore, the PH hazards assumption is valid.
 
 
 ```{r}
-cor(data$tumor_size, as.numeric(data$tumor_stage))
+martingale_resid <- residuals(fit_log_int, type = "martingale")
+
+# Age at diagnosis
+plot(data$age_at_diagnosis, martingale_resid)
+
+# Lymph nodes examined positive
+plot(data$log_nodes_positive, martingale_resid)
+
+# Tumor size
+plot(data$log_tumor_size, martingale_resid)
 
 ```
+
+All the above residuals look good! Seem to validify linear assumption after log transformation of lymph nodes and tumor size :)
+
+```{r}
+vif(fit_log_int)
+
+```
+
+The slight multicollinearity between her2_status:log_tumor_size is acceptable because the interaction is both statistically significant and biologically meaningful (i.e. the slope for tumor size isn’t the same in HER2+ and HER2− patients.)
+
+```{r}
+summary(fit_log_int)
+```
+
+* As HR increases with increasing tumor stage (9% for Stage 2 and 30% for Stage 3 compared to S1), but the differences are not significant. 
+
+* Tumour size and her2 status are not significant by itself.
+
+```{r}
+library(dplyr)
+library(broom)
+
+# Get tidy summary WITHOUT exponentiation
+tidy_fit <- broom::tidy(fit_log_int, exponentiate = FALSE, conf.int = TRUE)
+
+# Manually compute HR and its CI
+summary_table <- tidy_fit |>
+  mutate(
+    HR = exp(estimate),
+    conf.low.HR = exp(conf.low),
+    conf.high.HR = exp(conf.high),
+    significance = case_when(
+      p.value < 0.001 ~ "***",
+      p.value < 0.01  ~ "**",
+      p.value < 0.05  ~ "*",
+      p.value < 0.1   ~ ".",
+      TRUE ~ ""
+    ),
+    effect_interpretation = case_when(
+      HR > 1 ~ "Higher hazard (↑ risk)",
+      HR < 1 ~ "Lower hazard (↓ risk)",
+      TRUE ~ "No effect"
+    )
+  ) |>
+  select(term, estimate, HR, conf.low.HR, conf.high.HR, p.value,
+         significance, effect_interpretation) %>%
+  mutate(across(where(is.numeric), ~round(., 3)))
+
+kable(
+  summary_table,
+  caption = "Cox Proportional Hazards Model Summary",
+  align = "lccccccc",
+  format = "markdown"
+)
+
+```
+
 
