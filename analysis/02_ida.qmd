@@ -28,6 +28,12 @@ library(ggmosaic)
 
 ```
 
+
+```{r setup}
+source("../scripts/setup.R")
+```
+
+
 ```{r message=FALSE, warning=FALSE}
 data <- read.csv("../data/data_clean.csv")
 

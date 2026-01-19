@@ -16,7 +16,12 @@ Load packages:
 library(tidyverse)
 ```
 
-Load data. We select only the first 31 rows of the data as the rest are RNA profiles:
+Run setup script and load data. We select only the first 31 rows of the data as the rest are RNA profiles:
+
+
+```{r setup}
+source("../scripts/setup.R")
+```
 
 
 ```{r message=FALSE, warning=FALSE}

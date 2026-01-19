@@ -22,6 +22,11 @@ library(survminer)
 library(car)  # for vif()
 
 
+source("../scripts/setup.R")
+
+
+
+
 data <- read.csv("../data/data_clean.csv")
 
 # overall_survival is not mutated, as it needs to be numeric for survival analysis
