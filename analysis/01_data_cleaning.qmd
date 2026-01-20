@@ -172,7 +172,12 @@ data_clean <- data_clean |>
 
 ```{r}
 nrow(data_clean)
-write.csv(data_clean, "../data/data_clean.csv", row.names = FALSE)
+
+if (!file.exists("../data/data_clean.csv")) {
+  write.csv(data_clean, "../data/data_clean.csv", row.names = FALSE)
+} else {
+  message("data_clean.csv already exists — not overwriting")
+}
 glimpse(data_clean)
 ```
 
