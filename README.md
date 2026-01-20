@@ -5,7 +5,9 @@ In this semi-personal project, I investigated the role of clinical factors in th
 
 ## Contributions and acknowledgements
 
-I worked on this project as part of the University of Sydney SUDATA (Data Society) Research Mentoring Program--the topic/dataset was chosen out of personal interest. I completed all the analyses in R by myself while receiving guidance from my program mentor throughout. The final pdf presentation slides (based off this analysis, see `presentation/`) were prepared and presented in collaboration with two additional people.
+I worked on this project as part of the University of Sydney SUDATA (Data Society) Research Mentoring Program--the topic/dataset was chosen out of personal interest. I completed all the analyses in R by myself while receiving guidance from my program mentor throughout. 
+
+The final pdf presentation slides (based off this analysis, see `presentation/`) were prepared and presented in collaboration with two additional people.
 
 ## File structure
 
