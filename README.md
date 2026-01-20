@@ -8,12 +8,12 @@ This project was initiated and analysed by the author as part of the University 
 
 ## Repository Structure
 
-analysis/   # Quarto notebooks for data cleaning and analysis  
-data/       # Raw and cleaned datasets (raw data not tracked in Git)
-scripts/    # Shared setup and helper functions  
-presentation/  # Final presentation PDF  
-README.md  
-.gitignore  
+- **analysis/** — Quarto notebooks for data cleaning and analysis  
+- **data/** — Raw and cleaned datasets (raw data not tracked in Git)  
+- **scripts/** — Shared setup and helper functions  
+- **presentation/** — Final presentation PDF  
+- **README.md**  
+- **.gitignore**
 
 ## Data Source
 
@@ -22,6 +22,8 @@ https://www.kaggle.com/datasets/raghadalharbi/breast-cancer-gene-expression-prof
 
 
 ## How to Run
+
+0. Download `METABRIC_RNA_Mutation.csv` from the data source above and place it in `data/`.
 
 1. Run `analysis/01_data_cleaning.qmd` once to generate the cleaned dataset:  
    `data/data_clean.csv`
