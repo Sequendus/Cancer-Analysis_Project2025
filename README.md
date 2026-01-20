@@ -11,11 +11,9 @@ The final pdf presentation slides (based off this analysis, see `presentation/`)
 
 ## File structure
 
-- **analysis/** Quarto notebooks
-- **scripts/**
-- **presentation/** Final presentation PDF  
-- **README.md**  
-- **.gitignore**
+- `analysis/` Quarto notebooks
+- `scripts/`
+- `presentation/` Final presentation PDF  
 
 ## Data
 
